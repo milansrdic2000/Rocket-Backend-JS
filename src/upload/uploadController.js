@@ -44,7 +44,7 @@ const getUploadedImages = asyncHandler(async (req, res) => {
       });
     }
     const localPath = `assets/uploads/${file}`;
-    const serverPath = `https://rockettt.rs/assets/uploads/${file}`;
+    const serverPath = `/home/rockettt/public_html/assets/uploads/${file}`;
     const imageFiles = files.map((file) => serverPath);
     res.status(200).json({ success: true, data: imageFiles });
   });
