@@ -4,6 +4,10 @@ const express = require("express");
 const hostname = "127.0.0.1";
 const port = 3000;
 
+const path = require("path");
+
+const uploadPath = path.join(__dirname, "../../public_html_uploads");
+
 const bodyParser = require("body-parser");
 const app = express();
 const cors = require("cors");
@@ -29,5 +33,6 @@ app.get("/api/", (req, res) => {
 const PORT = 3000;
 app.listen(PORT, async () => {
   await db.connect();
+  console.log(uploadPath);
   console.log(`Server is running on port ${PORT}`);
 });
