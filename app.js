@@ -6,7 +6,7 @@ const port = 3000;
 
 const path = require("path");
 
-const uploadPath = path.join(__dirname, "../../public_html_uploads");
+const uploadPath = path.join(__dirname, "../../public_html/uploads");
 
 const bodyParser = require("body-parser");
 const app = express();
