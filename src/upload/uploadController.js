@@ -16,6 +16,11 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 const uploadController = asyncHandler(async (req, res) => {
+  const uploadPath = path.join(__dirname, "../public_html/uploads");
+  res.status(200).json({
+    status: true,
+    path: uploadPath,
+  });
   if (!req.file) {
     return res.status(400).send("No file uploaded.");
   }
