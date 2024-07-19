@@ -1,30 +1,120 @@
 const asyncHandler = require("express-async-handler");
 const db = require("../db/db");
 const getPosts = asyncHandler(async (req, res) => {
-  db.query("SELECT * FROM posts", (err, results, fields) => {
-    if (err) {
-      console.error("Error executing query:", err);
-      res.status(500).send(results);
-    }
-    res.status(200).send(results);
-  });
-});
-
-const addPost = asyncHandler(async (req, res) => {
-  const { title, content } = req.body;
   db.query(
-    "INSERT INTO posts (title, date) VALUES (?, ?)",
-    [title, new Date()],
+    "select p.*, c.* from posts p inner join post_content c on p.id = c.post_id",
     (err, results, fields) => {
       if (err) {
         console.error("Error executing query:", err);
         res.status(500).send(results);
       }
-      res.status(200).send(results);
+      const postsMap = new Map();
+      results.forEach((row) => {
+        const postId = row.post_id;
+
+        if (!postsMap.has(postId)) {
+          postsMap.set(postId, {
+            id: postId,
+            title: row.title,
+            date: row.date,
+            contents: [],
+          });
+        }
+
+        const post = postsMap.get(postId);
+        post.contents.push({
+          id: row["c.id"],
+          post_id: row.post_id,
+          html: row.html,
+          elementType: row.elementType,
+        });
+      });
+
+      const posts = Array.from(postsMap.values());
+      res.status(200).json({ success: true, data: posts });
     }
   );
 });
 
+const addPost = asyncHandler(async (req, res) => {
+  const { title, content } = req.body;
+  db.beginTransaction((err) => {
+    if (err) {
+      return res
+        .status(500)
+        .json({ status: false, data: "Error beginning transaction" });
+    }
+
+    // Insert the post
+    db.query(
+      "INSERT INTO posts (title, date) VALUES (?, CURDATE())",
+      [title],
+      (err, postResult) => {
+        if (err) {
+          db.rollback(() => {
+            console.error("Error inserting post:", err);
+          });
+          return res
+            .status(500)
+            .json({ status: false, data: "Error inserting" });
+        }
+
+        const postId = postResult.insertId;
+
+        // Insert the post content
+        const insertContentTasks = content.map((content) => {
+          return (callback) => {
+            const { html, elementType, serial_number: serialNumber } = content;
+            db.query(
+              "INSERT INTO post_content (post_id, html, elementType,serial_number) VALUES (?, ?, ?, ?)",
+              [postId, html, elementType, serialNumber],
+              callback
+            );
+          };
+        });
+
+        // Execute all content insertions in series
+        executeInSeries(insertContentTasks, (err) => {
+          if (err) {
+            db.rollback(() => {
+              console.error("Error inserting post content:", err);
+            });
+            return res
+              .status(500)
+              .json({ status: false, data: "Error inserting" });
+          }
+
+          // Commit the transaction
+          db.commit((err) => {
+            if (err) {
+              db.rollback(() => {
+                console.error("Error committing transaction:", err);
+              });
+              return res
+                .status(500)
+                .json({ status: false, data: "Error committing" });
+            }
+            res.json({ status: true, data: "Post added successfully" });
+          });
+        });
+      }
+    );
+  });
+});
+
+function executeInSeries(tasks, callback) {
+  let index = 0;
+
+  function next(err) {
+    if (err || index === tasks.length) {
+      return callback(err);
+    }
+    const task = tasks[index++];
+    task(next);
+  }
+
+  next();
+}
 module.exports = {
   getPosts,
   addPost,
