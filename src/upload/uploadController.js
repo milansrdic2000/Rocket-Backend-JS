@@ -3,7 +3,7 @@ const multer = require("multer");
 const path = require("path");
 
 // const uploadPath =
-// "/Users/milansrdic/Desktop/ROCKET2/rocket-web/src/assets/uploads";
+//   "/Users/milansrdic/Desktop/ROCKET2/rocket-web/src/assets/uploads";
 // const uploadPath = path.join(__dirname, "../../uploads");
 const uploadPath = "/home/rockettt/public_html/assets/uploads";
 
@@ -43,9 +43,11 @@ const getUploadedImages = asyncHandler(async (req, res) => {
         error: err,
       });
     }
-    const localPath = `assets/uploads/${file}`;
-    const serverPath = `/home/rockettt/public_html/assets/uploads/${file}`;
-    const imageFiles = files.map((file) => serverPath);
+    // const localPath = (file) => `assets/uploads/${file}`;
+    const serverPath = (file) =>
+      `/home/rockettt/public_html/assets/uploads/${file}`;
+    const imageFiles = files.map(serverPath);
+    console.log(imageFiles);
     res.status(200).json({ success: true, data: imageFiles });
   });
 });
