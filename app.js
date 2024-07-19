@@ -38,10 +38,6 @@ app.get("/api/", (req, res) => {
   res.status(200).send("Hello World");
 });
 
-app.get("*", (req, res) => {
-  res.sendFile("/home/rockettt/public_html/index.html");
-});
-
 app.use(errorMiddleware);
 
 const PORT = 3000;
