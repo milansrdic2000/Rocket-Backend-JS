@@ -16,21 +16,33 @@ app.use(bodyParser.json());
 app.use(cors());
 
 const addMessage = require("./src/contact/contact");
-const { getPosts, addPost } = require("./src/posts/postsController");
-const { upload, uploadController } = require("./src/upload/uploadController");
+
+const {
+  upload,
+  uploadController,
+  getUploadedImages,
+} = require("./src/upload/uploadController");
 const db = require("./src/db/db");
+const errorMiddleware = require("./src/middleware/errorMiddleware");
+const postRouter = require("./src/posts/postsRouter");
+
+app.use("/api/admin/posts", postRouter);
 
 app.post("/api/contact", addMessage);
-app.get("/api/admin/posts", getPosts);
-app.post("/api/admin/posts", addPost);
 app.post("/api/admin/upload", upload.single("image"), uploadController);
-
+app.get("/api/admin/uploads", getUploadedImages);
 app.get("/", (req, res) => {
   res.status(200).send("Hello World");
 });
 app.get("/api/", (req, res) => {
   res.status(200).send("Hello World");
 });
+
+app.get("*", (req, res) => {
+  res.sendFile("/home/rockettt/public_html/index.html");
+});
+
+app.use(errorMiddleware);
 
 const PORT = 3000;
 app.listen(PORT, async () => {
