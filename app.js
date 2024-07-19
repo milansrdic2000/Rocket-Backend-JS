@@ -12,11 +12,14 @@ app.use(cors());
 
 const addMessage = require("./src/contact/contact");
 const { getPosts, addPost } = require("./src/posts/postsController");
+const { upload, uploadController } = require("./src/upload/uploadController");
 const db = require("./src/db/db");
 
 app.post("/api/contact", addMessage);
 app.get("/api/admin/posts", getPosts);
 app.post("/api/admin/posts", addPost);
+app.post("/api/admin/upload", upload.single("image"), uploadController);
+
 app.get("/", (req, res) => {
   res.status(200).send("Hello World");
 });
