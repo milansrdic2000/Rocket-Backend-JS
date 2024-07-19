@@ -2,11 +2,11 @@ const asyncHandler = require("express-async-handler");
 const multer = require("multer");
 const path = require("path");
 
-const uploadPath = path.join(__dirname, "../public_html/uploads");
-
+// const uploadPath = path.join(__dirname, "../public_html/uploads");
+const uploadPath = "/home/rockettt/public_html/uploads";
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const uploadPath = path.join(__dirname, "../public_html/uploads");
+    // const uploadPath = path.join(__dirname, "../public_html/uploads");
     cb(null, uploadPath);
   },
   filename: function (req, file, cb) {
@@ -16,11 +16,6 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 const uploadController = asyncHandler(async (req, res) => {
-  const uploadPath = path.join(__dirname, "../public_html/uploads");
-  res.status(200).json({
-    status: true,
-    path: uploadPath,
-  });
   if (!req.file) {
     return res.status(400).send("No file uploaded.");
   }
