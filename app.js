@@ -11,12 +11,12 @@ app.use(bodyParser.json());
 app.use(cors());
 
 const addMessage = require("./src/contact/contact");
-const { getPosts } = require("./src/posts/postsController");
+const { getPosts, addPost } = require("./src/posts/postsController");
 const db = require("./src/db/db");
 
 app.post("/api/contact", addMessage);
 app.get("/api/admin/posts", getPosts);
-
+app.post("/api/admin/posts", addPost);
 app.get("/", (req, res) => {
   res.status(200).send("Hello World");
 });
