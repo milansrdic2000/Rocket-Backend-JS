@@ -2,11 +2,11 @@ const asyncHandler = require("express-async-handler");
 const multer = require("multer");
 const path = require("path");
 
-const uploadPath = path.join(__dirname, "../../public_html/uploads");
+const uploadPath = path.join(__dirname, "../public_html/uploads");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const uploadPath = path.join(__dirname, "../../public_html/uploads");
+    const uploadPath = path.join(__dirname, "../public_html/uploads");
     cb(null, uploadPath);
   },
   filename: function (req, file, cb) {
@@ -23,7 +23,6 @@ const uploadController = asyncHandler(async (req, res) => {
     status: true,
     message: "File is uploaded",
     data: {
-      path: uploadPath,
       name: req.file.filename,
       mimetype: req.file.mimetype,
       size: req.file.size,
