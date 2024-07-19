@@ -43,10 +43,10 @@ const getUploadedImages = asyncHandler(async (req, res) => {
         error: err,
       });
     }
-    // const localPath = (file) => `assets/uploads/${file}`;
-    const serverPath = (file) =>
-      `/home/rockettt/public_html/assets/uploads/${file}`;
-    const imageFiles = files.map(serverPath);
+    const localPath = (file) => `assets/uploads/${file}`;
+    // const serverPath = (file) =>
+    //   `/home/rockettt/public_html/assets/uploads/${file}`;
+    const imageFiles = files.map(localPath);
     console.log(imageFiles);
     res.status(200).json({ success: true, data: imageFiles });
   });
