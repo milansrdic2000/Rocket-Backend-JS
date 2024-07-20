@@ -3,7 +3,7 @@ const multer = require("multer");
 const path = require("path");
 
 // const uploadPath =
-//   "/Users/milansrdic/Desktop/ROCKET2/rocket-web/src/assets/uploads";
+// "/Users/milansrdic/Desktop/ROCKET2/rocket-web/src/assets/uploads";
 // const uploadPath = path.join(__dirname, "../../uploads");
 const uploadPath = "/home/rockettt/public_html/assets/uploads";
 
@@ -27,6 +27,7 @@ const uploadController = asyncHandler(async (req, res) => {
     status: true,
     message: "File is uploaded",
     data: {
+      file: req.file,
       name: req.file.filename,
       mimetype: req.file.mimetype,
       size: req.file.size,
@@ -44,8 +45,7 @@ const getUploadedImages = asyncHandler(async (req, res) => {
       });
     }
     const localPath = (file) => `assets/uploads/${file}`;
-    // const serverPath = (file) =>
-    //   `/home/rockettt/public_html/assets/uploads/${file}`;
+
     const imageFiles = files.map(localPath);
     console.log(imageFiles);
     res.status(200).json({ success: true, data: imageFiles });
