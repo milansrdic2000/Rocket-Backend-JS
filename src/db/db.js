@@ -1,12 +1,13 @@
 const mySql = require("mysql");
+require("dotenv").config();
 
-const prod = true;
-
+const prod = process.env.production === "true";
+console.log(prod);
 const connection = prod
   ? mySql.createConnection({
       host: "rockettt.rs", // e.g., 'mysql.yourdomain.com'
-      user: "rockettt_miki",
-      password: "fds57,Fk",
+      user: process.env.dbUser,
+      password: process.env.dbPass,
       //   port: 3306,
       database: "rockettt_admin_panel",
       //   socketPath: "/Applications/MAMP/tmp/mysql/mysql.sock",

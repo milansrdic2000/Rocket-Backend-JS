@@ -1,8 +1,9 @@
 const asyncHandler = require("express-async-handler");
 const jwt = require("jsonwebtoken");
-const SECRET_KEY = "sukna_na_snjiranje";
-const validUsername = "123"; //
-const validPassword = "123"; // Replace with your password
+
+const SECRET_KEY = process.env.JWT_SECRET;
+const validUsername = process.env.adminUser; //
+const validPassword = process.env.adminPass; // Replace with your password
 
 const login = asyncHandler(async (req, res) => {
   const { username, password } = req.body;
