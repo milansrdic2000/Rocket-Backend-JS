@@ -2,11 +2,16 @@ const asyncHandler = require("express-async-handler");
 const db = require("../db/db");
 
 const addPostContent = asyncHandler(async (req, res) => {
-  const { html, elementType, serial_number: serialNumber } = req.body;
+  const {
+    htmlSrb,
+    htmlEng,
+    elementType,
+    serial_number: serialNumber,
+  } = req.body;
   if (elementType === "text")
     db.query(
-      "INSERT INTO post_content (post_id, html, elementType,serial_number) VALUES (?, ?, ?, ?)",
-      [req.params.id, html, elementType, serialNumber],
+      "INSERT INTO post_content (post_id, htmlSrb,htmlEng, elementType,serial_number) VALUES (?, ?,?, ?, ?)",
+      [req.params.id, htmlSrb, htmlEng, elementType, serialNumber],
       (err, results, fields) => {
         if (err) {
           console.error("Error executing query:", err);
@@ -37,12 +42,18 @@ const addPostContent = asyncHandler(async (req, res) => {
   }
 });
 const updatePostContent = asyncHandler(async (req, res) => {
-  const { html, elementType, serial_number: serialNumber } = req.body;
+  const {
+    htmlSrb,
+    htmlEng,
+    elementType,
+    serial_number: serialNumber,
+  } = req.body;
   if (elementType === "text")
     db.query(
-      "UPDATE post_content SET html = ?, elementType = ?, serial_number=? WHERE id = ? and post_id = ?",
+      "UPDATE post_content SET htmlSrb = ?,htmlEng=?, elementType = ?, serial_number=? WHERE id = ? and post_id = ?",
       [
-        req.body.html,
+        htmlSrb,
+        htmlEng,
         req.body.elementType,
         req.body.serial_number,
         req.body.id,
@@ -87,8 +98,14 @@ const updatePost = asyncHandler(async (req, res) => {
     }
     // update post
     db.query(
-      "UPDATE posts SET title = ?, date=? WHERE id = ?",
-      [req.body.title, req.body.date, req.params.id],
+      "UPDATE posts SET titleSrb = ?,titleEng=?, date=?, category = ? WHERE id = ?",
+      [
+        req.body.titleSrb,
+        req.body.titleEng,
+        req.body.date,
+        req.body.category,
+        req.params.id,
+      ],
       (err, results, fields) => {
         if (err) {
           console.error("Error executing query:", err);
@@ -100,7 +117,8 @@ const updatePost = asyncHandler(async (req, res) => {
         const updateContentTasks = req.body.contents.map((content) => {
           return (callback) => {
             const {
-              html,
+              htmlSrb,
+              htmlEng,
               elementType,
               serial_number: serialNumber,
               imgUrl,
@@ -112,14 +130,21 @@ const updatePost = asyncHandler(async (req, res) => {
             if (elementType === "text") {
               if (crudMode === "update")
                 db.query(
-                  "UPDATE post_content SET html = ?, elementType = ?, serial_number=? WHERE id = ? and post_id = ?",
-                  [html, elementType, serialNumber, id, req.params.id],
+                  "UPDATE post_content SET htmlSrb = ?,htmlEng=?, elementType = ?, serial_number=? WHERE id = ? and post_id = ?",
+                  [
+                    htmlSrb,
+                    htmlEng,
+                    elementType,
+                    serialNumber,
+                    id,
+                    req.params.id,
+                  ],
                   callback
                 );
               else if (crudMode === "create") {
                 db.query(
-                  "INSERT INTO post_content (post_id, html, elementType,serial_number) VALUES (?, ?, ?, ?)",
-                  [req.params.id, html, elementType, serialNumber],
+                  "INSERT INTO post_content (post_id, htmlSrb,htmlEng, elementType,serial_number) VALUES (?, ?, ?, ?, ?)",
+                  [req.params.id, htmlSrb, htmlEng, elementType, serialNumber],
                   callback
                 );
               }
@@ -189,17 +214,32 @@ const updatePost = asyncHandler(async (req, res) => {
   });
 });
 const getPosts = asyncHandler(async (req, res) => {
-  db.query(
-    "select p.*, c.*,p.id as post_id1 from posts p left join post_content c on p.id = c.post_id",
-    (err, results, fields) => {
-      if (err) {
-        console.error("Error executing query:", err);
-        res.status(500).send(results);
-      }
-      const posts = mapPosts(results);
-      res.status(200).json({ success: true, data: posts });
+  const { pageNumber = 1, pageSize = 1, category, random } = req.query;
+
+  const offset = (+pageNumber - 1) * pageSize;
+
+  let query = `select p.*, c.*,p.id as post_id1 from posts p left join post_content c on p.id = c.post_id `;
+  query += category ? `where p.category = ${category} ` : "";
+  query += `order by p.date desc`;
+
+  db.query(query, (err, results, fields) => {
+    if (err) {
+      console.error("Error executing query:", err);
+      res.status(500).send(results);
     }
-  );
+    const posts = mapPosts(results);
+    const numOfPages = Math.ceil(posts.length / pageSize);
+
+    let paginatedPosts;
+
+    paginatedPosts = random
+      ? posts.sort(() => Math.random() - 0.5).slice(0, pageSize)
+      : posts.slice(offset, offset + pageSize);
+
+    res
+      .status(200)
+      .json({ success: true, data: { posts: paginatedPosts, numOfPages } });
+  });
 });
 const getPost = asyncHandler(async (req, res) => {
   db.query(
@@ -218,8 +258,22 @@ const getPost = asyncHandler(async (req, res) => {
     }
   );
 });
+const searchPostByTitle = asyncHandler(async (req, res) => {
+  const { language, searchTerm } = req.body;
+  const query = `select p.id, p.titleSrb, p.titleEng from posts p where p.${
+    language === "srb" ? "titleSrb" : "titleEng"
+  } like ?`;
+  db.query(query, [`%${searchTerm}%`], (err, results, fields) => {
+    if (err) {
+      console.error("Error executing query:", err);
+      res.status(500).send(results);
+    }
+
+    res.status(200).json({ success: true, data: results });
+  });
+});
 const addPost = asyncHandler(async (req, res) => {
-  const { title, contents } = req.body;
+  const { titleSrb, titleEng, date, contents, category } = req.body;
   db.beginTransaction((err) => {
     if (err) {
       return res
@@ -229,8 +283,8 @@ const addPost = asyncHandler(async (req, res) => {
 
     // Insert the post
     db.query(
-      "INSERT INTO posts (title, date) VALUES (?, CURDATE())",
-      [title],
+      "INSERT INTO posts (titleSrb,titleEng, date,category) VALUES (?,?, ?, ?)",
+      [titleSrb, titleEng, date, category],
       (err, postResult) => {
         if (err) {
           db.rollback(() => {
@@ -247,7 +301,8 @@ const addPost = asyncHandler(async (req, res) => {
         const insertContentTasks = contents.map((content) => {
           return (callback) => {
             const {
-              html,
+              htmlSrb,
+              htmlEng,
               elementType,
               serial_number: serialNumber,
               imgUrl,
@@ -256,8 +311,8 @@ const addPost = asyncHandler(async (req, res) => {
             } = content;
             if (elementType === "text")
               db.query(
-                "INSERT INTO post_content (post_id, html, elementType,serial_number) VALUES (?, ?, ?, ?)",
-                [postId, html, elementType, serialNumber],
+                "INSERT INTO post_content (post_id, htmlSrb, htmlEng, elementType,serial_number) VALUES (?, ?, ?, ?, ?)",
+                [postId, htmlSrb, htmlEng, elementType, serialNumber],
                 callback
               );
             else if (elementType === "image") {
@@ -339,8 +394,10 @@ function mapPosts(results) {
     if (!postsMap.has(postId)) {
       postsMap.set(postId, {
         id: postId,
-        title: row.title,
+        titleSrb: row.titleSrb,
+        titleEng: row.titleEng,
         date: row.date,
+        category: row.CATEGORY,
         contents: [],
       });
     }
@@ -354,7 +411,8 @@ function mapPosts(results) {
       post_id: row.post_id,
       serial_number: row.serial_number,
       ...(row.elementType === "text" && {
-        html: row.html,
+        htmlSrb: row.htmlSrb,
+        htmlEng: row.htmlEng,
       }),
       ...(row.elementType === "image" && {
         imgUrl: row.imgUrl,
@@ -393,4 +451,5 @@ module.exports = {
   updatePostContent,
   addPostContent,
   deletePost,
+  searchPostByTitle,
 };

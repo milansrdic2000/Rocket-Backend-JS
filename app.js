@@ -25,12 +25,18 @@ const {
 const db = require("./src/db/db");
 const errorMiddleware = require("./src/middleware/errorMiddleware");
 const postRouter = require("./src/posts/postsRouter");
+const { login, loginCheck } = require("./src/login/loginController");
+const authenticateJWT = require("./src/middleware/authMiddleware");
 
 app.use("/api/admin/posts", postRouter);
 
 app.post("/api/contact", addMessage);
 app.post("/api/admin/upload", upload.single("image"), uploadController);
 app.get("/api/admin/uploads", getUploadedImages);
+
+app.post("/api/admin/login", login);
+app.get("/api/admin/can-activate", authenticateJWT, loginCheck);
+
 app.get("/", (req, res) => {
   res.status(200).send("Hello World");
 });

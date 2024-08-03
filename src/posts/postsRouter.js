@@ -1,4 +1,5 @@
 const postRouter = require("express").Router();
+const authenticateJWT = require("../middleware/authMiddleware");
 const {
   getPosts,
   getPost,
@@ -8,14 +9,16 @@ const {
   deletePostContent,
   addPostContent,
   deletePost,
+  searchPostByTitle,
 } = require("./postsController");
 
 postRouter.get("/", getPosts);
 postRouter.get("/:id", getPost);
-postRouter.post("/", addPost);
-postRouter.post("/:id/content", addPostContent);
-postRouter.put("/:id", updatePost);
-postRouter.put("/:id/content/:post_id", updatePostContent);
-postRouter.delete("/:post_id/content/:id", deletePostContent);
-postRouter.delete("/:id", deletePost);
+postRouter.post("/", authenticateJWT, addPost);
+postRouter.post("/:id/content", authenticateJWT, addPostContent);
+postRouter.put("/:id", authenticateJWT, updatePost);
+postRouter.put("/:id/content/:post_id", authenticateJWT, updatePostContent);
+postRouter.delete("/:post_id/content/:id", authenticateJWT, deletePostContent);
+postRouter.delete("/:id", authenticateJWT, deletePost);
+postRouter.post("/searchByTitle", searchPostByTitle);
 module.exports = postRouter;
